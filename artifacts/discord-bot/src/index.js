@@ -1,4 +1,6 @@
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
+const { DisTube } = require("distube");
+const { YouTubePlugin } = require("@distube/youtube");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -12,6 +14,32 @@ const client = new Client({
 });
 
 client.commands = new Collection();
+
+// Configurar DisTube
+client.distube = new DisTube(client, {
+  plugins: [new YouTubePlugin()],
+  emitNewSongOnly: true,
+});
+
+// Eventos do DisTube
+client.distube
+  .on("playSong", (queue, song) => {
+    queue.textChannel?.send(
+      `🎶 Tocando agora: **${song.name}** - \`${song.formattedDuration}\` (Pedido por: ${song.user})`
+    );
+  })
+  .on("addSong", (queue, song) => {
+    queue.textChannel?.send(
+      `✅ Adicionado à fila: **${song.name}** - \`${song.formattedDuration}\``
+    );
+  })
+  .on("error", (channel, error) => {
+    console.error("Erro no DisTube:", error);
+    channel?.send("❌ Ocorreu um erro ao tocar a música.");
+  })
+  .on("finish", (queue) => {
+    queue.textChannel?.send("⏹️ Fila encerrada. Que a Força esteja com você!");
+  });
 
 // Carregando comandos
 const commandsPath = path.join(__dirname, "commands");
