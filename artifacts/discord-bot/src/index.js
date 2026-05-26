@@ -1,6 +1,4 @@
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
-const { DisTube } = require("distube");
-const { YtDlpPlugin } = require("@distube/yt-dlp");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -14,32 +12,6 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-
-// Configurar DisTube
-client.distube = new DisTube(client, {
-  plugins: [new YtDlpPlugin({ update: false })],
-  emitNewSongOnly: true,
-});
-
-// Eventos do DisTube
-client.distube
-  .on("playSong", (queue, song) => {
-    queue.textChannel?.send(
-      `🎶 Tocando agora: **${song.name}** - \`${song.formattedDuration}\` (Pedido por: ${song.user})`
-    );
-  })
-  .on("addSong", (queue, song) => {
-    queue.textChannel?.send(
-      `✅ Adicionado à fila: **${song.name}** - \`${song.formattedDuration}\``
-    );
-  })
-  .on("error", (queue, error) => {
-    console.error("Erro no DisTube:", error?.message || error);
-    queue.textChannel?.send(`❌ Erro ao tocar a música: ${error?.message || "erro desconhecido"}`);
-  })
-  .on("finish", (queue) => {
-    queue.textChannel?.send("⏹️ Fila encerrada. Que a Força esteja com você!");
-  });
 
 // Carregando comandos
 const commandsPath = path.join(__dirname, "commands");

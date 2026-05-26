@@ -1,24 +1,18 @@
 const { SlashCommandBuilder } = require("discord.js");
+const { stopMusic } = require("../../lib/music");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("stop")
     .setDescription("Para a música e limpa a fila."),
   async execute(interaction) {
-    const distube = interaction.client.distube;
-    if (!distube) {
+    const parou = stopMusic(interaction.guild.id);
+    if (!parou) {
       return interaction.reply({
-        content: "⚠️ O player de música não está disponível no momento.",
+        content: "🔇 Não há nada tocando no momento.",
         ephemeral: true,
       });
     }
-
-    const queue = distube.getQueue(interaction.guild.id);
-    if (!queue) {
-      return interaction.reply("🔇 Não há nada tocando no momento.");
-    }
-
-    await queue.stop();
     await interaction.reply("⏹️ Música parada. Silêncio no espaço sideral.");
   },
 };

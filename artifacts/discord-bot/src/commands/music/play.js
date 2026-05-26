@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
+const { addSong } = require("../../lib/music");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -7,7 +8,7 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName("musica")
-        .setDescription("Nome ou URL da música")
+        .setDescription("Nome ou URL do YouTube")
         .setRequired(true)
     ),
   async execute(interaction) {
@@ -20,20 +21,24 @@ module.exports = {
     }
 
     const query = interaction.options.getString("musica");
-    await interaction.reply(`🔍 Procurando: **${query}** na Galáxia...`);
+    await interaction.reply(`🔍 Procurando: **${query}**...`);
 
     try {
-      const distube = interaction.client.distube;
-      if (!distube) {
-        return interaction.editReply("⚠️ O player de música não está disponível no momento.");
+      const song = await addSong(
+        interaction.guild.id,
+        canalVoz,
+        interaction.channel,
+        query
+      );
+
+      if (!song) {
+        await interaction.editReply("❌ Nenhum resultado encontrado. Tente outro nome ou uma URL do YouTube.");
+      } else {
+        await interaction.editReply(`✅ **${song.title}** adicionado à fila!`);
       }
-      await distube.play(canalVoz, query, {
-        textChannel: interaction.channel,
-        member: interaction.member,
-      });
     } catch (error) {
-      console.error("Erro no play:", error);
-      await interaction.editReply("❌ Erro ao tentar tocar a música. Verifique se a URL é válida.");
+      console.error("Erro no /play:", error);
+      await interaction.editReply("❌ Erro ao tentar tocar a música. Tente novamente.");
     }
   },
 };
