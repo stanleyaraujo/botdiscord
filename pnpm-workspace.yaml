@@ -69,6 +69,7 @@ catalog:
 autoInstallPeers: false
 
 onlyBuiltDependencies:
+  - '@distube/yt-dlp'
   - '@swc/core'
   - better-sqlite3
   - esbuild

@@ -221,6 +221,9 @@ importers:
       '@distube/youtube':
         specifier: ^1.0.4
         version: 1.0.4(distube@5.2.3(@discordjs/voice@0.19.2)(discord.js@14.26.4))
+      '@distube/yt-dlp':
+        specifier: ^2.0.1
+        version: 2.0.1(distube@5.2.3(@discordjs/voice@0.19.2)(discord.js@14.26.4))
       better-sqlite3:
         specifier: ^12.10.0
         version: 12.10.0
@@ -603,6 +606,11 @@ packages:
 
   '@distube/youtube@1.0.4':
     resolution: {integrity: sha512-7iQbtLSv4kpgiX2XtP28CB3z2kgaxw6F8+jNu1RztnW7ckPK3N/8Ayl1yh41YpbrRIHbNMzIVTwguYG0s2ZOuA==}
+    peerDependencies:
+      distube: '5'
+
+  '@distube/yt-dlp@2.0.1':
+    resolution: {integrity: sha512-9c16lRU6jbyal38UUr5E36+2lp36s0DaJySOtFjuAPgaJkp2xvKvyd+s4rFZSqVQGJO5GOhBiH+HD115SKfKAw==}
     peerDependencies:
       distube: '5'
 
@@ -1930,6 +1938,10 @@ packages:
   d3-timer@3.0.1:
     resolution: {integrity: sha512-ndfJ/JxxMd3nw31uyKoY2naivF+r29V+Lc0svZxe1JvvIRmi8hUsrMvdOwgS1o6uBHmiz91geQ0ylPP0aj1VUA==}
     engines: {node: '>=12'}
+
+  dargs@7.0.0:
+    resolution: {integrity: sha512-2iy1EkLdlBzQGvbweYRFxmFath8+K7+AKB0TlhHWkNuH+TmovaMH/Wp7V7R4u7f4SnX3OgLsU9t1NI9ioDnUpg==}
+    engines: {node: '>=8'}
 
   date-fns-jalali@4.1.0-0:
     resolution: {integrity: sha512-hTIP/z+t+qKwBDcmmsnmjWTduxCg+5KfdqWQvb2X/8C9+knYY6epN/pfxdDuyVlSVeFz0sM5eEfwIUQ70U4ckg==}
@@ -3551,6 +3563,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@distube/yt-dlp@2.0.1(distube@5.2.3(@discordjs/voice@0.19.2)(discord.js@14.26.4))':
+    dependencies:
+      dargs: 7.0.0
+      distube: 5.2.3(@discordjs/voice@0.19.2)(discord.js@14.26.4)
+      undici: 6.24.1
+
   '@distube/ytdl-core@4.16.12':
     dependencies:
       http-cookie-agent: 7.0.4(tough-cookie@5.1.2)(undici@7.26.0)
@@ -4988,6 +5006,8 @@ snapshots:
       d3-array: 3.2.4
 
   d3-timer@3.0.1: {}
+
+  dargs@7.0.0: {}
 
   date-fns-jalali@4.1.0-0: {}
 
