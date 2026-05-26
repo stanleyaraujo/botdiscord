@@ -93,13 +93,25 @@ async function addSong(guildId, voiceChannel, textChannel, query) {
   let songInfo;
 
   try {
-    // Tenta como URL direta
-    if (playdl.yt_validate(query) === "video") {
+    const validation = playdl.yt_validate(query);
+    if (validation === "video") {
+      // URL direta de vídeo — extrai ID e usa URL canônica
       const info = await playdl.video_info(query);
+      const videoId = info.video_details.id;
       songInfo = {
-        url: query,
+        url: `https://www.youtube.com/watch?v=${videoId}`,
         title: info.video_details.title || "Desconhecido",
         duration: info.video_details.durationRaw || "?",
+      };
+    } else if (validation === "playlist") {
+      // URL de playlist — pega o primeiro vídeo
+      const results = await playdl.search(query, { source: { youtube: "video" }, limit: 1 });
+      if (!results || results.length === 0) return null;
+      const video = results[0];
+      songInfo = {
+        url: `https://www.youtube.com/watch?v=${video.id}`,
+        title: video.title || "Desconhecido",
+        duration: video.durationRaw || "?",
       };
     } else {
       // Busca por nome
@@ -107,7 +119,7 @@ async function addSong(guildId, voiceChannel, textChannel, query) {
       if (!results || results.length === 0) return null;
       const video = results[0];
       songInfo = {
-        url: video.url,
+        url: `https://www.youtube.com/watch?v=${video.id}`,
         title: video.title || "Desconhecido",
         duration: video.durationRaw || "?",
       };
