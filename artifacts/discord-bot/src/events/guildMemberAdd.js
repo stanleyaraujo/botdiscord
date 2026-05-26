@@ -1,3 +1,5 @@
+const { getCanal } = require("../lib/config");
+
 const BOAS_VINDAS = [
   "Um novo recruta chegou à **Aliança Rebelde**! Que a Força esteja com você, {user}! ⚡",
   "Sentimos sua presença na Força, {user}! Bem-vindo(a) ao servidor, Padawan! 🌟",
@@ -10,7 +12,7 @@ const BOAS_VINDAS = [
 module.exports = {
   name: "guildMemberAdd",
   async execute(member) {
-    const canal = member.guild.systemChannel;
+    const canal = await getCanal(member.guild, "boasvindas");
     if (!canal) return;
 
     const msg = BOAS_VINDAS[Math.floor(Math.random() * BOAS_VINDAS.length)].replace(

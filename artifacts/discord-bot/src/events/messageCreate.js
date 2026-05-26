@@ -1,4 +1,5 @@
 const { QuickDB } = require("quick.db");
+const { getCanal } = require("../lib/config");
 const db = new QuickDB();
 
 const TITULOS = [
@@ -21,8 +22,8 @@ const RESPOSTAS_FORCA = [
   "...esteja com você também! 🌟",
   "...esteja com você, Padawan! ✨",
   "...e que ela nunca o abandone! 🔵",
-  "...esteja com você sempre. — *Obi-Wan Kenobi* 🌿",
   "...guie seus passos! ⚡",
+  "...esteja com você sempre. — *Obi-Wan Kenobi* 🌿",
 ];
 
 module.exports = {
@@ -49,10 +50,18 @@ module.exports = {
       userData.level++;
       userData.xp = 0;
       const titulo = getTitulo(userData.level);
-      message.reply(
+      const texto =
         `✨ **Parabéns, ${message.author.username}!** Você subiu para o nível **${userData.level}**!\n` +
-        `Seu novo título: **${titulo}**\nQue a Força esteja com você.`
-      ).catch(() => {});
+        `Seu novo título: **${titulo}**\nQue a Força esteja com você.`;
+
+      const canalLevelUp = await getCanal(message.guild, "levelup");
+      if (canalLevelUp && canalLevelUp.id !== message.channel.id) {
+        // Envia no canal configurado com menção
+        await canalLevelUp.send(`<@${message.author.id}> ${texto}`).catch(() => {});
+      } else {
+        // Responde na mesma mensagem
+        await message.reply(texto).catch(() => {});
+      }
     }
 
     await db.set(key, userData);
