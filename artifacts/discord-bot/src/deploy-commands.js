@@ -7,7 +7,7 @@ const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
 
 if (!token || !clientId || !guildId) {
-  console.error("Missing DISCORD_TOKEN, CLIENT_ID, or GUILD_ID environment variables.");
+  console.error("Variáveis DISCORD_TOKEN, CLIENT_ID ou GUILD_ID não configuradas.");
   process.exit(1);
 }
 
@@ -30,12 +30,12 @@ const rest = new REST().setToken(token);
 
 (async () => {
   try {
-    console.log(`Registering ${commands.length} slash commands...`);
+    console.log(`Registrando ${commands.length} comandos slash...`);
     const data = await rest.put(
       Routes.applicationGuildCommands(clientId, guildId),
       { body: commands }
     );
-    console.log(`Successfully registered ${data.length} slash commands.`);
+    console.log(`${data.length} comandos registrados com sucesso!`);
   } catch (error) {
     console.error(error);
   }

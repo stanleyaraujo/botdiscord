@@ -13,7 +13,7 @@ const client = new Client({
 
 client.commands = new Collection();
 
-// Load commands
+// Carregando comandos
 const commandsPath = path.join(__dirname, "commands");
 const commandFolders = fs.readdirSync(commandsPath);
 
@@ -25,12 +25,12 @@ for (const folder of commandFolders) {
     if ("data" in command && "execute" in command) {
       client.commands.set(command.data.name, command);
     } else {
-      console.warn(`[WARN] Command at ${file} is missing "data" or "execute".`);
+      console.warn(`[AVISO] Comando ${file} não possui "data" ou "execute".`);
     }
   }
 }
 
-// Load events
+// Carregando eventos
 const eventsPath = path.join(__dirname, "events");
 const eventFiles = fs.readdirSync(eventsPath).filter((f) => f.endsWith(".js"));
 
@@ -45,7 +45,7 @@ for (const file of eventFiles) {
 
 const token = process.env.DISCORD_TOKEN;
 if (!token) {
-  console.error("DISCORD_TOKEN environment variable is not set.");
+  console.error("A variável de ambiente DISCORD_TOKEN não está definida.");
   process.exit(1);
 }
 

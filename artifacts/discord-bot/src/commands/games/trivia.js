@@ -1,47 +1,47 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 
-const questions = [
-  { q: "What color is Mace Windu's lightsaber?", a: "purple" },
-  { q: "Who is Luke Skywalker's father?", a: "darth vader" },
-  { q: "What planet is Anakin Skywalker from?", a: "tatooine" },
-  { q: "Who killed Han Solo?", a: "kylo ren" },
-  { q: "What is the name of Han Solo's ship?", a: "millennium falcon" },
-  { q: "Who trained Obi-Wan Kenobi?", a: "qui-gon jinn" },
-  { q: "What species is Yoda?", a: "unknown" },
-  { q: "Who is Darth Vader's master?", a: "palpatine" },
-  { q: "What Order ordered the clone troopers to kill the Jedi?", a: "order 66" },
-  { q: "What is the name of the Wookiee home planet?", a: "kashyyyk" },
-  { q: "Who built C-3PO?", a: "anakin skywalker" },
-  { q: "What planet is Yoda hiding on in the original trilogy?", a: "dagobah" },
-  { q: "What is the real name of Kylo Ren?", a: "ben solo" },
-  { q: "What is the Mandalorian's creed called?", a: "the way" },
+const perguntas = [
+  { p: "Qual é a cor do sabre de luz de Mace Windu?", r: "roxo" },
+  { p: "Quem é o pai de Luke Skywalker?", r: "darth vader" },
+  { p: "Qual é o planeta natal de Anakin Skywalker?", r: "tatooine" },
+  { p: "Quem matou Han Solo?", r: "kylo ren" },
+  { p: "Qual é o nome da nave de Han Solo?", r: "millennium falcon" },
+  { p: "Qual Mestre Jedi treinou Obi-Wan Kenobi?", r: "qui-gon jinn" },
+  { p: "Quem é o mestre de Darth Vader?", r: "palpatine" },
+  { p: "Qual ordem mandou os clones eliminarem os Jedi?", r: "ordem 66" },
+  { p: "Qual é o planeta natal dos Wookiees?", r: "kashyyyk" },
+  { p: "Quem construiu o C-3PO?", r: "anakin skywalker" },
+  { p: "Em qual planeta Yoda se esconde na trilogia original?", r: "dagobah" },
+  { p: "Qual é o nome verdadeiro de Kylo Ren?", r: "ben solo" },
+  { p: "Como se chama o credo dos Mandalorianos?", r: "o caminho" },
+  { p: "De qual planeta é a Princesa Leia?", r: "alderaan" },
 ];
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("trivia")
-    .setDescription("Answer a Star Wars trivia question. You have 20 seconds!"),
+    .setDescription("Responda uma pergunta de trivia sobre Star Wars. Você tem 20 segundos!"),
   async execute(interaction) {
-    const item = questions[Math.floor(Math.random() * questions.length)];
+    const item = perguntas[Math.floor(Math.random() * perguntas.length)];
 
     const embed = new EmbedBuilder()
-      .setTitle("🧠 Star Wars Trivia")
-      .setDescription(item.q)
+      .setTitle("🧠 Trivia Star Wars")
+      .setDescription(item.p)
       .setColor("#FFE81F")
-      .setFooter({ text: "Type your answer in chat — you have 20 seconds!" });
+      .setFooter({ text: "Digite sua resposta no chat — você tem 20 segundos!" });
 
     await interaction.reply({ embeds: [embed] });
 
-    const filter = (m) => m.content.toLowerCase().includes(item.a.toLowerCase());
-    const collector = interaction.channel.createMessageCollector({ filter, time: 20_000, max: 1 });
+    const filtro = (m) => m.content.toLowerCase().includes(item.r.toLowerCase());
+    const coletor = interaction.channel.createMessageCollector({ filter: filtro, time: 20_000, max: 1 });
 
-    collector.on("collect", (m) => {
-      m.reply(`✅ **${m.author.username}** got it! The answer was: **${item.a}**. May the Force be with you!`);
+    coletor.on("collect", (m) => {
+      m.reply(`✅ **${m.author.username}** acertou! A resposta era: **${item.r}**. Que a Força esteja com você!`);
     });
 
-    collector.on("end", (collected) => {
-      if (collected.size === 0) {
-        interaction.followUp(`⏰ Time's up! Nobody answered correctly. The answer was: **${item.a}**.`);
+    coletor.on("end", (coletados) => {
+      if (coletados.size === 0) {
+        interaction.followUp(`⏰ Tempo esgotado! Ninguém acertou. A resposta era: **${item.r}**.`);
       }
     });
   },

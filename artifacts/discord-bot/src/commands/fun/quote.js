@@ -1,32 +1,32 @@
 const { SlashCommandBuilder } = require("discord.js");
 
-const quotes = [
-  { text: "May the Force be with you.", source: "Various" },
-  { text: "I have a bad feeling about this.", source: "Various" },
-  { text: "Do. Or do not. There is no try.", source: "Yoda" },
-  { text: "I am your father!", source: "Darth Vader" },
-  { text: "Fear is the path to the dark side.", source: "Yoda" },
-  { text: "Chewie, we're home.", source: "Han Solo" },
-  { text: "That's no moon. It's a space station.", source: "Obi-Wan Kenobi" },
-  { text: "The Force is strong with this one.", source: "Darth Vader" },
-  { text: "There's always a bigger fish.", source: "Qui-Gon Jinn" },
-  { text: "Hello there!", source: "Obi-Wan Kenobi" },
-  { text: "General Kenobi!", source: "General Grievous" },
-  { text: "This is the Way.", source: "The Mandalorian" },
-  { text: "Patience you must have, my young Padawan.", source: "Yoda" },
-  { text: "Your lack of faith is disturbing.", source: "Darth Vader" },
-  { text: "Never tell me the odds!", source: "Han Solo" },
-  { text: "I find your lack of faith disturbing.", source: "Darth Vader" },
-  { text: "The Force will be with you. Always.", source: "Obi-Wan Kenobi" },
-  { text: "So this is how liberty dies — with thunderous applause.", source: "Padmé Amidala" },
+const frases = [
+  { texto: "Que a Força esteja com você.", fonte: "Vários personagens" },
+  { texto: "Eu tenho um mau pressentimento sobre isso.", fonte: "Vários personagens" },
+  { texto: "Faça ou não faça. A tentativa não existe.", fonte: "Yoda" },
+  { texto: "Eu sou seu pai!", fonte: "Darth Vader" },
+  { texto: "O medo é o caminho para o lado sombrio.", fonte: "Yoda" },
+  { texto: "Chewie, estamos em casa.", fonte: "Han Solo" },
+  { texto: "Isso não é uma lua. É uma estação espacial.", fonte: "Obi-Wan Kenobi" },
+  { texto: "A Força é forte neste aqui.", fonte: "Darth Vader" },
+  { texto: "Sempre há um peixe maior.", fonte: "Qui-Gon Jinn" },
+  { texto: "Hello there!", fonte: "Obi-Wan Kenobi" },
+  { texto: "General Kenobi!", fonte: "General Grievous" },
+  { texto: "Isto é o Caminho.", fonte: "O Mandaloriano" },
+  { texto: "Paciência você deve ter, meu jovem Padawan.", fonte: "Yoda" },
+  { texto: "Sua falta de fé é perturbadora.", fonte: "Darth Vader" },
+  { texto: "Nunca me diga as probabilidades!", fonte: "Han Solo" },
+  { texto: "Que a Força esteja com você. Sempre.", fonte: "Obi-Wan Kenobi" },
+  { texto: "É assim que a liberdade morre — com aplausos ensurdecedores.", fonte: "Padmé Amidala" },
+  { texto: "Eu não sou um monstro. Sou um Mandaloriano.", fonte: "Din Djarin" },
 ];
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("quote")
-    .setDescription("Get a random iconic Star Wars quote."),
+    .setName("frase")
+    .setDescription("Receba uma frase icônica de Star Wars."),
   async execute(interaction) {
-    const q = quotes[Math.floor(Math.random() * quotes.length)];
-    await interaction.reply(`🎬 **Star Wars Quote:**\n\n> "${q.text}"\n> — *${q.source}*`);
+    const f = frases[Math.floor(Math.random() * frases.length)];
+    await interaction.reply(`🎬 **Citação da Galáxia:**\n\n> "${f.texto}"\n> — *${f.fonte}*`);
   },
 };

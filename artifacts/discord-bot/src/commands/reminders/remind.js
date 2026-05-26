@@ -2,32 +2,32 @@ const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("remind")
-    .setDescription("Set a reminder (A holocron will be activated).")
+    .setName("lembrar")
+    .setDescription("Define um lembrete (Um holocron será ativado).")
     .addIntegerOption((option) =>
-      option.setName("minutes").setDescription("Time in minutes").setRequired(true).setMinValue(1).setMaxValue(1440)
+      option.setName("tempo").setDescription("Tempo em minutos").setRequired(true).setMinValue(1).setMaxValue(1440)
     )
     .addStringOption((option) =>
-      option.setName("message").setDescription("What should I remind you about?").setRequired(true)
+      option.setName("mensagem").setDescription("O que devo te lembrar?").setRequired(true)
     ),
   async execute(interaction) {
-    const time = interaction.options.getInteger("minutes");
-    const message = interaction.options.getString("message");
+    const tempo = interaction.options.getInteger("tempo");
+    const mensagem = interaction.options.getString("mensagem");
 
     await interaction.reply(
-      `📟 **Holocron activated!** I'll remind you about: "${message}" in ${time} minute(s).`
+      `📟 **Holocron ativado!** Vou te lembrar de: "${mensagem}" em ${tempo} minuto(s).`
     );
 
     setTimeout(async () => {
       try {
         await interaction.user.send(
-          `🔵 **HOLOCRON MESSAGE:** You asked me to remind you: "${message}"`
+          `🔵 **MENSAGEM DO HOLOCRON:** Você me pediu para te lembrar de: "${mensagem}"`
         );
       } catch {
         await interaction.channel.send(
-          `${interaction.user}, 🔵 **HOLOCRON MESSAGE:** "${message}"`
+          `${interaction.user}, 🔵 **MENSAGEM DO HOLOCRON:** "${mensagem}"`
         );
       }
-    }, time * 60_000);
+    }, tempo * 60_000);
   },
 };

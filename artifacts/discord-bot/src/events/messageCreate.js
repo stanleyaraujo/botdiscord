@@ -9,16 +9,16 @@ module.exports = {
     const key = `xp_${message.guild.id}_${message.author.id}`;
     let userData = (await db.get(key)) || { xp: 0, level: 1 };
 
-    const xpGain = Math.floor(Math.random() * 11) + 5;
-    userData.xp += xpGain;
+    const xpGanho = Math.floor(Math.random() * 11) + 5;
+    userData.xp += xpGanho;
 
-    const nextLevelXP = userData.level * 100;
+    const xpProximoNivel = userData.level * 100;
 
-    if (userData.xp >= nextLevelXP) {
+    if (userData.xp >= xpProximoNivel) {
       userData.level++;
       userData.xp = 0;
       message.reply(
-        `✨ **Congratulations, Young Padawan!** You reached level **${userData.level}**! May the Force be with you.`
+        `✨ **Parabéns, Jovem Padawan!** Você subiu para o nível **${userData.level}**! Que a Força esteja com você.`
       );
     }
 
