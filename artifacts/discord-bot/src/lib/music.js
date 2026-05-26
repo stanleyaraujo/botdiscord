@@ -4,12 +4,95 @@ const {
   createAudioResource,
   AudioPlayerStatus,
   VoiceConnectionStatus,
+  StreamType,
   entersState,
 } = require("@discordjs/voice");
-const playdl = require("play-dl");
+const { spawn, execFile } = require("node:child_process");
 
-// Mapa de filas por servidor: guildId -> { connection, player, queue, textChannel }
+const YTDLP = "yt-dlp";
+
+// Busca informações do vídeo (por nome ou URL)
+function getVideoInfo(query) {
+  return new Promise((resolve, reject) => {
+    const isUrl = query.startsWith("http://") || query.startsWith("https://");
+    const searchQuery = isUrl ? query : `ytsearch1:${query}`;
+
+    execFile(
+      YTDLP,
+      [
+        "--no-warnings",
+        "--no-playlist",
+        "-j",
+        searchQuery,
+      ],
+      { timeout: 15000 },
+      (error, stdout, stderr) => {
+        if (error) return reject(new Error(stderr || error.message));
+        try {
+          const info = JSON.parse(stdout.trim());
+          resolve({
+            url: `https://www.youtube.com/watch?v=${info.id}`,
+            title: info.title || "Desconhecido",
+            duration: formatDuration(info.duration || 0),
+          });
+        } catch {
+          reject(new Error("Não foi possível processar as informações do vídeo."));
+        }
+      }
+    );
+  });
+}
+
+// Cria um stream de áudio via yt-dlp pipe
+function createYtDlpStream(url) {
+  const ytdlp = spawn(YTDLP, [
+    "--no-warnings",
+    "--no-playlist",
+    "-f", "bestaudio",
+    "-o", "-",
+    "--quiet",
+    url,
+  ]);
+
+  ytdlp.stderr.on("data", (d) => {
+    const msg = d.toString().trim();
+    if (msg) console.error("[yt-dlp]", msg);
+  });
+
+  return ytdlp.stdout;
+}
+
+function formatDuration(seconds) {
+  if (!seconds) return "?";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+// Mapa de filas por servidor
 const queues = new Map();
+
+async function playSong(guildId, song) {
+  const queue = queues.get(guildId);
+  if (!queue) return;
+
+  try {
+    const rawStream = createYtDlpStream(song.url);
+    const resource = createAudioResource(rawStream, { inputType: StreamType.Arbitrary });
+
+    queue.player.play(resource);
+    queue.playing = true;
+
+    queue.textChannel?.send(
+      `🎶 Tocando agora: **${song.title}** - \`${song.duration}\` (Pedido por: ${song.requestedBy})`
+    );
+  } catch (err) {
+    console.error("Erro ao criar stream:", err.message);
+    queue.textChannel?.send(`❌ Não consegui tocar **${song.title}**: ${err.message}`);
+    queue.songs.shift();
+    if (queue.songs.length > 0) playSong(guildId, queue.songs[0]);
+  }
+}
 
 async function getOrCreateQueue(guildId, voiceChannel, textChannel) {
   if (queues.has(guildId)) {
@@ -25,7 +108,6 @@ async function getOrCreateQueue(guildId, voiceChannel, textChannel) {
   });
 
   const player = createAudioPlayer();
-
   connection.subscribe(player);
 
   const queue = { connection, player, songs: [], textChannel, playing: false };
@@ -69,61 +151,10 @@ async function getOrCreateQueue(guildId, voiceChannel, textChannel) {
   return queue;
 }
 
-async function playSong(guildId, song) {
-  const queue = queues.get(guildId);
-  if (!queue) return;
-
-  try {
-    const stream = await playdl.stream(song.url, { quality: 2 });
-    const resource = createAudioResource(stream.stream, { inputType: stream.type });
-    queue.player.play(resource);
-    queue.playing = true;
-    queue.textChannel?.send(
-      `🎶 Tocando agora: **${song.title}** - \`${song.duration}\` (Pedido por: ${song.requestedBy})`
-    );
-  } catch (err) {
-    console.error("Erro ao criar stream:", err.message);
-    queue.textChannel?.send(`❌ Não consegui tocar **${song.title}**: ${err.message}`);
-    queue.songs.shift();
-    if (queue.songs.length > 0) playSong(guildId, queue.songs[0]);
-  }
-}
-
 async function addSong(guildId, voiceChannel, textChannel, query) {
   let songInfo;
-
   try {
-    const validation = playdl.yt_validate(query);
-    if (validation === "video") {
-      // URL direta de vídeo — extrai ID e usa URL canônica
-      const info = await playdl.video_info(query);
-      const videoId = info.video_details.id;
-      songInfo = {
-        url: `https://www.youtube.com/watch?v=${videoId}`,
-        title: info.video_details.title || "Desconhecido",
-        duration: info.video_details.durationRaw || "?",
-      };
-    } else if (validation === "playlist") {
-      // URL de playlist — pega o primeiro vídeo
-      const results = await playdl.search(query, { source: { youtube: "video" }, limit: 1 });
-      if (!results || results.length === 0) return null;
-      const video = results[0];
-      songInfo = {
-        url: `https://www.youtube.com/watch?v=${video.id}`,
-        title: video.title || "Desconhecido",
-        duration: video.durationRaw || "?",
-      };
-    } else {
-      // Busca por nome
-      const results = await playdl.search(query, { source: { youtube: "video" }, limit: 1 });
-      if (!results || results.length === 0) return null;
-      const video = results[0];
-      songInfo = {
-        url: `https://www.youtube.com/watch?v=${video.id}`,
-        title: video.title || "Desconhecido",
-        duration: video.durationRaw || "?",
-      };
-    }
+    songInfo = await getVideoInfo(query);
   } catch (err) {
     console.error("Erro na busca:", err.message);
     return null;
@@ -131,13 +162,20 @@ async function addSong(guildId, voiceChannel, textChannel, query) {
 
   const queue = await getOrCreateQueue(guildId, voiceChannel, textChannel);
 
-  const song = { ...songInfo, requestedBy: textChannel.guild?.members?.cache?.get(voiceChannel.id)?.displayName || "alguém" };
+  const member = voiceChannel.members?.get(voiceChannel.guild.members?.cache?.first()?.id);
+  const song = {
+    ...songInfo,
+    requestedBy: textChannel.guild?.members?.cache?.find(
+      (m) => m.voice?.channelId === voiceChannel.id && !m.user.bot
+    )?.displayName || "alguém",
+  };
+
   queue.songs.push(song);
 
   if (!queue.playing) {
     playSong(guildId, queue.songs[0]);
   } else {
-    textChannel.send(`✅ Adicionado à fila: **${song.title}**`);
+    textChannel.send(`✅ Adicionado à fila: **${song.title}** - \`${song.duration}\``);
   }
 
   return song;
