@@ -1,5 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { trackProgress } = require("../../lib/missions");
+const { addCreditos } = require("../../lib/credits");
+const { unlock } = require("../../lib/conquistas");
+const { addPontos, getFaccaoUser } = require("../../lib/faccao");
 
 const MOVIMENTOS = [
   "atacou com um golpe Forma IV — Ataru",
@@ -51,13 +54,28 @@ module.exports = {
         `🔵 ${desafiante.displayName} *${mov1}*.\n` +
         `🔴 ${oponente.displayName} *${mov2}*.\n\n` +
         `✨ **${vencedor.displayName}** vence! ${final}\n` +
-        `😔 ${perdedor.displayName} foi derrotado e se rende.`
+        `😔 ${perdedor.displayName} foi derrotado e se rende.\n\n` +
+        `🏆 **${vencedor.displayName}** ganhou **20 💰 créditos**!`
       )
       .setFooter({ text: "Que a Força decida sempre o mais digno." });
 
     await interaction.reply({ embeds: [embed] });
 
-    // Rastrear vitória do vencedor
-    await trackProgress(interaction.guild.id, vencedor.id, "vitorias_duelo", 1).catch(() => {});
+    const guildId = interaction.guild.id;
+
+    // Conquistas e recompensas para ambos
+    await Promise.all([
+      unlock(guildId, desafiante.id, "guerreiro", interaction.channel),
+      unlock(guildId, oponente.id, "guerreiro", interaction.channel),
+      unlock(guildId, vencedor.id, "invicto", interaction.channel),
+      addCreditos(guildId, vencedor.id, 20),
+      trackProgress(guildId, vencedor.id, "vitorias_duelo", 1),
+    ]).catch(() => {});
+
+    // Pontos de facção para o vencedor
+    const faccaoVencedor = await getFaccaoUser(guildId, vencedor.id).catch(() => null);
+    if (faccaoVencedor) {
+      await addPontos(guildId, faccaoVencedor, 1).catch(() => {});
+    }
   },
 };

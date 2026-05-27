@@ -1,6 +1,10 @@
 const { QuickDB } = require("quick.db");
 const { getCanal } = require("../lib/config");
 const { trackProgress, trackNivel } = require("../lib/missions");
+const { addCreditos } = require("../lib/credits");
+const { temBoostAtivo } = require("../lib/inventario");
+const { getMultiplicador } = require("../lib/eventos");
+const { unlock } = require("../lib/conquistas");
 const db = new QuickDB();
 
 const TITULOS = [
@@ -32,22 +36,45 @@ module.exports = {
   async execute(message) {
     if (message.author.bot || !message.guild) return;
 
+    const { guild, author } = message;
+
     // Auto-resposta "que a força"
     if (message.content.toLowerCase().includes("que a força")) {
       const resposta = RESPOSTAS_FORCA[Math.floor(Math.random() * RESPOSTAS_FORCA.length)];
       await message.reply(`Que a Força ${resposta}`).catch(() => {});
     }
 
-    // Rastrear mensagens para missão Patrulha
-    await trackProgress(message.guild.id, message.author.id, "mensagens", 1).catch(() => {});
+    // ── Créditos por mensagem ──────────────────────────────────────
+    const credGanhos = Math.floor(Math.random() * 3) + 1;
+    const novoSaldo = await addCreditos(guild.id, author.id, credGanhos);
 
-    // Sistema de XP
-    const key = `xp_${message.guild.id}_${message.author.id}`;
-    let userData = (await db.get(key)) || { xp: 0, level: 1 };
+    // Conquista: Crésus Galáctico (500 créditos)
+    if (novoSaldo >= 500) {
+      await unlock(guild.id, author.id, "rico", message.channel).catch(() => {});
+    }
 
-    const xpGanho = Math.floor(Math.random() * 11) + 5;
+    // ── Contagem de mensagens para conquista Centenário ──────────
+    const msgKey = `msgs_${guild.id}_${author.id}`;
+    const msgCount = ((await db.get(msgKey)) || 0) + 1;
+    await db.set(msgKey, msgCount);
+    if (msgCount >= 100) {
+      await unlock(guild.id, author.id, "centenario", message.channel).catch(() => {});
+    }
+
+    // ── Missão: Patrulha ──────────────────────────────────────────
+    await trackProgress(guild.id, author.id, "mensagens", 1).catch(() => {});
+
+    // ── XP (com multiplicadores de evento e boost) ────────────────
+    const xpKey = `xp_${guild.id}_${author.id}`;
+    let userData = (await db.get(xpKey)) || { xp: 0, level: 1 };
+
+    const baseXP = Math.floor(Math.random() * 11) + 5;
+    const multEvento = await getMultiplicador(guild.id);
+    const temBoost = await temBoostAtivo(guild.id, author.id);
+    const multBoost = temBoost ? 2 : 1;
+    const xpGanho = baseXP * multEvento * multBoost;
+
     userData.xp += xpGanho;
-
     const xpProximoNivel = userData.level * 100;
 
     if (userData.xp >= xpProximoNivel) {
@@ -55,20 +82,24 @@ module.exports = {
       userData.xp = 0;
       const titulo = getTitulo(userData.level);
       const texto =
-        `✨ **Parabéns, ${message.author.username}!** Você subiu para o nível **${userData.level}**!\n` +
+        `✨ **Parabéns, ${author.username}!** Você subiu para o nível **${userData.level}**!\n` +
         `Seu novo título: **${titulo}**\nQue a Força esteja com você.`;
 
-      const canalLevelUp = await getCanal(message.guild, "levelup");
+      const canalLevelUp = await getCanal(guild, "levelup");
       if (canalLevelUp && canalLevelUp.id !== message.channel.id) {
-        await canalLevelUp.send(`<@${message.author.id}> ${texto}`).catch(() => {});
+        await canalLevelUp.send(`<@${author.id}> ${texto}`).catch(() => {});
       } else {
         await message.reply(texto).catch(() => {});
       }
 
-      // Rastrear nível para missão Veterano
-      await trackNivel(message.guild.id, message.author.id, userData.level).catch(() => {});
+      // Conquistas de nível
+      if (userData.level >= 5)  await unlock(guild.id, author.id, "nivel5",  message.channel).catch(() => {});
+      if (userData.level >= 10) await unlock(guild.id, author.id, "nivel10", message.channel).catch(() => {});
+
+      // Missão: Veterano
+      await trackNivel(guild.id, author.id, userData.level).catch(() => {});
     }
 
-    await db.set(key, userData);
+    await db.set(xpKey, userData);
   },
 };

@@ -1,0 +1,98 @@
+const ITENS = [
+  {
+    id: "titulo_cacador",
+    nome: "Título: Caçador de Recompensas",
+    desc: "Exibe 'Caçador de Recompensas' no /info",
+    preco: 150,
+    tipo: "titulo",
+    icone: "🎯",
+    raridade: "Raro",
+  },
+  {
+    id: "titulo_mandaloriano",
+    nome: "Título: O Mandaloriano",
+    desc: "Exibe 'O Mandaloriano' no /info",
+    preco: 300,
+    tipo: "titulo",
+    icone: "⚔️",
+    raridade: "Épico",
+  },
+  {
+    id: "titulo_escolhido",
+    nome: "Título: O Escolhido",
+    desc: "Exibe 'O Escolhido da Força' no /info",
+    preco: 500,
+    tipo: "titulo",
+    icone: "✨",
+    raridade: "Lendário",
+  },
+  {
+    id: "titulo_chanceler",
+    nome: "Título: Chanceler das Sombras",
+    desc: "Exibe 'Chanceler das Sombras' no /info",
+    preco: 400,
+    tipo: "titulo",
+    icone: "🌑",
+    raridade: "Épico",
+  },
+  {
+    id: "boost_xp_1h",
+    nome: "Boost de XP (1h)",
+    desc: "Dobra o XP ganho por mensagens durante 1 hora",
+    preco: 200,
+    tipo: "boost",
+    icone: "⚡",
+    raridade: "Raro",
+  },
+  {
+    id: "cristal_kyber",
+    nome: "Cristal Kyber Raro",
+    desc: "Item colecionável lendário — forjado nas cavernas de Ilum",
+    preco: 400,
+    tipo: "colecao",
+    icone: "💎",
+    raridade: "Lendário",
+  },
+  {
+    id: "holocron_antigo",
+    nome: "Holocron Antigo",
+    desc: "Item colecionável — guarda sabedoria de Mestres Jedi extintos",
+    preco: 100,
+    tipo: "colecao",
+    icone: "🔮",
+    raridade: "Comum",
+  },
+  {
+    id: "armadura_beskar",
+    nome: "Armadura Beskar",
+    desc: "Item colecionável — o material mais resistente da galáxia",
+    preco: 350,
+    tipo: "colecao",
+    icone: "🛡️",
+    raridade: "Épico",
+  },
+  {
+    id: "moeda_hutts",
+    nome: "Moeda dos Hutts",
+    desc: "Item colecionável — moeda de ouro cunhada por Jabba",
+    preco: 75,
+    tipo: "colecao",
+    icone: "🪙",
+    raridade: "Comum",
+  },
+  {
+    id: "sabre_corvus",
+    nome: "Sabre de Ahsoka (réplica)",
+    desc: "Item colecionável — sabre branco de lâmina curva da Ahsoka Tano",
+    preco: 600,
+    tipo: "colecao",
+    icone: "⚪",
+    raridade: "Lendário",
+  },
+];
+
+function getItemById(id) {
+  return ITENS.find((i) => i.id === id) || null;
+}
+
+module.exports = { ITENS, getItemById };

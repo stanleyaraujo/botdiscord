@@ -1,5 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { MISSOES, getMissaoById, getUserMissoes, saveUserMissoes, trackProgress } = require("../../lib/missions");
+const { addCreditos } = require("../../lib/credits");
+const { unlock } = require("../../lib/conquistas");
 const { QuickDB } = require("quick.db");
 const db = new QuickDB();
 
@@ -17,6 +19,14 @@ function getTitulo(level) {
   }
   return "🌱 Iniciante da Ordem";
 }
+
+// Créditos extras por dificuldade
+const CREDITOS_DIFICULDADE = {
+  "🟢 Fácil": 50,
+  "🟡 Média": 100,
+  "🟠 Difícil": 150,
+  "🔴 Lendária": 300,
+};
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -44,7 +54,6 @@ module.exports = {
     }
 
     const ativa = mData.ativas.find((a) => a.id === id);
-
     if (!ativa) {
       return interaction.reply({ content: `❌ Você não aceitou esta missão. Use \`/aceitar\` primeiro.`, ephemeral: true });
     }
@@ -59,7 +68,7 @@ module.exports = {
     if (ativa.progresso < missao.meta) {
       const faltam = missao.meta - ativa.progresso;
       return interaction.reply({
-        content: `⏳ A missão **${missao.nome}** ainda não está completa! Faltam **${faltam}** ${missao.objetivo.split(" ").slice(-1)[0].toLowerCase()}.`,
+        content: `⏳ A missão **${missao.nome}** ainda não está completa! Faltam **${faltam}** para o objetivo.`,
         ephemeral: true,
       });
     }
@@ -69,7 +78,7 @@ module.exports = {
     mData.completas.push(id);
     await saveUserMissoes(interaction.guild.id, interaction.user.id, mData);
 
-    // Dar XP
+    // XP
     const xpKey = `xp_${interaction.guild.id}_${interaction.user.id}`;
     let xpData = (await db.get(xpKey)) || { xp: 0, level: 1 };
     xpData.xp += missao.recompensa.xp;
@@ -82,8 +91,17 @@ module.exports = {
     }
     await db.set(xpKey, xpData);
 
+    // Créditos por missão
+    const creditos = CREDITOS_DIFICULDADE[missao.dificuldade] || 50;
+    await addCreditos(interaction.guild.id, interaction.user.id, creditos);
+
     // Rastrear progresso na missão "lenda"
     await trackProgress(interaction.guild.id, interaction.user.id, "missoes_completas", 1);
+
+    // Conquista: Mestre das Missões (5 completas)
+    if (mData.completas.length >= 5) {
+      await unlock(interaction.guild.id, interaction.user.id, "missao_mestre", interaction.channel);
+    }
 
     const embed = new EmbedBuilder()
       .setTitle(`🏆 Missão Entregue: ${missao.nome}`)
@@ -91,8 +109,9 @@ module.exports = {
       .setDescription(`*${missao.desc}*\n\n✅ **Missão concluída com sucesso!**`)
       .addFields(
         { name: "✨ XP Recebido", value: `+${missao.recompensa.xp} XP`, inline: true },
+        { name: "💰 Créditos", value: `+${creditos} créditos`, inline: true },
         { name: "⭐ Nível atual", value: `${xpData.level} — ${getTitulo(xpData.level)}`, inline: true },
-        { name: "📋 Total concluídas", value: `${mData.completas.length} missão(ões)`, inline: true },
+        { name: "📋 Missões completas", value: `${mData.completas.length} missão(ões)`, inline: true },
       )
       .setFooter({ text: "Use /missoes para aceitar novas missões!" });
 
@@ -101,7 +120,7 @@ module.exports = {
     }
 
     if (mData.completas.length === MISSOES.length) {
-      embed.addFields({ name: "🌟 PARABÉNS!", value: "Você completou **todas as missões** da Ordem Jedi! Você é uma verdadeira lenda da galáxia!" });
+      embed.addFields({ name: "🌟 PARABÉNS!", value: "Você completou **todas as missões** da Ordem Jedi! Lenda da galáxia!" });
     }
 
     await interaction.reply({ embeds: [embed] });
