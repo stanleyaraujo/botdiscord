@@ -1,5 +1,10 @@
 const { QuickDB } = require("quick.db");
-const db = new QuickDB();
+const path = require("path");
+
+// Caminho fixo para o banco de dados — evita perda de dados no Replit
+const db = new QuickDB({
+  filePath: path.join(__dirname, "..", "..", "json.sqlite"),
+});
 
 function key(guildId, userId) {
   return `creditos_${guildId}_${userId}`;
