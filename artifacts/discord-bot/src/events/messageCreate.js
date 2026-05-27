@@ -1,5 +1,6 @@
 const { QuickDB } = require("quick.db");
 const { getCanal } = require("../lib/config");
+const { trackProgress, trackNivel } = require("../lib/missions");
 const db = new QuickDB();
 
 const TITULOS = [
@@ -37,6 +38,9 @@ module.exports = {
       await message.reply(`Que a Força ${resposta}`).catch(() => {});
     }
 
+    // Rastrear mensagens para missão Patrulha
+    await trackProgress(message.guild.id, message.author.id, "mensagens", 1).catch(() => {});
+
     // Sistema de XP
     const key = `xp_${message.guild.id}_${message.author.id}`;
     let userData = (await db.get(key)) || { xp: 0, level: 1 };
@@ -56,12 +60,13 @@ module.exports = {
 
       const canalLevelUp = await getCanal(message.guild, "levelup");
       if (canalLevelUp && canalLevelUp.id !== message.channel.id) {
-        // Envia no canal configurado com menção
         await canalLevelUp.send(`<@${message.author.id}> ${texto}`).catch(() => {});
       } else {
-        // Responde na mesma mensagem
         await message.reply(texto).catch(() => {});
       }
+
+      // Rastrear nível para missão Veterano
+      await trackNivel(message.guild.id, message.author.id, userData.level).catch(() => {});
     }
 
     await db.set(key, userData);

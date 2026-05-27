@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { trackProgress } = require("../../lib/missions");
 
 const MOVIMENTOS = [
   "atacou com um golpe Forma IV — Ataru",
@@ -55,5 +56,8 @@ module.exports = {
       .setFooter({ text: "Que a Força decida sempre o mais digno." });
 
     await interaction.reply({ embeds: [embed] });
+
+    // Rastrear vitória do vencedor
+    await trackProgress(interaction.guild.id, vencedor.id, "vitorias_duelo", 1).catch(() => {});
   },
 };

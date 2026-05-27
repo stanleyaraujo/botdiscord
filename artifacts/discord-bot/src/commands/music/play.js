@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const { addSong } = require("../../lib/music");
+const { trackProgress } = require("../../lib/missions");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -24,17 +25,14 @@ module.exports = {
     await interaction.reply(`🔍 Procurando: **${query}**...`);
 
     try {
-      const song = await addSong(
-        interaction.guild.id,
-        canalVoz,
-        interaction.channel,
-        query
-      );
+      const song = await addSong(interaction.guild.id, canalVoz, interaction.channel, query);
 
       if (!song) {
         await interaction.editReply("❌ Nenhum resultado encontrado. Tente outro nome ou uma URL do YouTube.");
       } else {
         await interaction.editReply(`✅ **${song.title}** adicionado à fila!`);
+        // Rastrear para missão DJ
+        await trackProgress(interaction.guild.id, interaction.user.id, "play", 1).catch(() => {});
       }
     } catch (error) {
       console.error("Erro no /play:", error);

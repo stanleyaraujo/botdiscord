@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { QuickDB } = require("quick.db");
+const { trackProgress } = require("../../lib/missions");
 const db = new QuickDB();
 
 const MISSOES_DIARIAS = [
@@ -41,7 +42,7 @@ module.exports = {
       });
     }
 
-    const xpBonus = Math.floor(Math.random() * 101) + 50; // 50–150 XP
+    const xpBonus = Math.floor(Math.random() * 101) + 50;
     const missao = MISSOES_DIARIAS[Math.floor(Math.random() * MISSOES_DIARIAS.length)];
 
     let userData = (await db.get(chaveXP)) || { xp: 0, level: 1 };
@@ -57,6 +58,9 @@ module.exports = {
 
     await db.set(chaveXP, userData);
     await db.set(chaveCD, agora);
+
+    // Rastrear para missão Agente da Resistência
+    await trackProgress(interaction.guild.id, interaction.user.id, "missao_diaria", 1).catch(() => {});
 
     const embed = new EmbedBuilder()
       .setTitle("📋 Missão Diária Concluída!")

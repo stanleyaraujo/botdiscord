@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { trackProgress } = require("../../lib/missions");
 
 const perguntas = [
   { p: "Qual é a cor do sabre de luz de Mace Windu?", r: "roxo" },
@@ -15,6 +16,10 @@ const perguntas = [
   { p: "Qual é o nome verdadeiro de Kylo Ren?", r: "ben solo" },
   { p: "Como se chama o credo dos Mandalorianos?", r: "o caminho" },
   { p: "De qual planeta é a Princesa Leia?", r: "alderaan" },
+  { p: "Qual é o nome do pai adotivo de Luke?", r: "owen lars" },
+  { p: "Quantos anos Yoda viveu?", r: "900" },
+  { p: "Qual é o nome do bartender alienígena da Cantina de Mos Eisley?", r: "wuher" },
+  { p: "Em qual filme Anakin Skywalker se torna Darth Vader?", r: "a vingança dos sith" },
 ];
 
 module.exports = {
@@ -32,11 +37,13 @@ module.exports = {
 
     await interaction.reply({ embeds: [embed] });
 
-    const filtro = (m) => m.content.toLowerCase().includes(item.r.toLowerCase());
+    const filtro = (m) => m.author.id === interaction.user.id && m.content.toLowerCase().includes(item.r.toLowerCase());
     const coletor = interaction.channel.createMessageCollector({ filter: filtro, time: 20_000, max: 1 });
 
-    coletor.on("collect", (m) => {
+    coletor.on("collect", async (m) => {
       m.reply(`✅ **${m.author.username}** acertou! A resposta era: **${item.r}**. Que a Força esteja com você!`);
+      // Rastrear acerto para missão Sábio
+      await trackProgress(interaction.guild.id, m.author.id, "trivia_acerto", 1).catch(() => {});
     });
 
     coletor.on("end", (coletados) => {
